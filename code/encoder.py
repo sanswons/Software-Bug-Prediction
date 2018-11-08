@@ -23,7 +23,7 @@ class Encoder:
     """
 
     def __init__(self, vocab_size=8192, pct_bpe=0.2, word_tokenizer=None,
-                 ngram_min=2, ngram_max=2, required_tokens=None, strict=False, 
+                 silent=True, ngram_min=2, ngram_max=2, required_tokens=None, strict=False, 
                  EOW=DEFAULT_EOW, SOW=DEFAULT_SOW, UNK=DEFAULT_UNK, PAD=DEFAULT_PAD):
         if vocab_size < 1:
             raise ValueError('vocab size must be greater than 0.')
@@ -45,11 +45,18 @@ class Encoder:
         self.bpe_vocab = {}  # type: Dict[str, int]
         self.inverse_word_vocab = {}  # type: Dict[int, str]
         self.inverse_bpe_vocab = {}  # type: Dict[int, str]
-        
+        self._progress_bar = iter if silent else tqdm
         self.ngram_min = ngram_min
         self.ngram_max = ngram_max
         self.strict = strict
 
+    def mute(self):
+        """ Turn on silent mode """
+        self._progress_bar = iter
+
+    def unmute(self):
+        """ Turn off silent mode """
+        self._progress_bar = tqdm
 
     def byte_pair_counts(self, words):
         # type: (Encoder, Iterable[str]) -> Iterable[Counter]
@@ -234,7 +241,8 @@ class Encoder:
             'words': self.word_vocab,
             'kwargs': {
                 'vocab_size': self.vocab_size,
-                'pct_bpe': self.pct_bpe,s
+                'pct_bpe': self.pct_bpe,
+                'silent': self._progress_bar is iter,
                 'ngram_min': self.ngram_min,
                 'ngram_max': self.ngram_max,
                 'required_tokens': self.required_tokens,
