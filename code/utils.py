@@ -22,41 +22,6 @@ def encode_dataset(*splits, encoder):
         encoded_splits.append(fields)
     return encoded_splits
 
-def shape_list(x):
-    """
-    deal with dynamic shape in tensorflow cleanly
-    """
-    ps = x.get_shape().as_list()
-    ts = tf.shape(x)
-    return [ts[i] if ps[i] is None else ps[i] for i in range(len(ps))]
-
-def np_softmax(x, t=1):
-    x = x/t
-    x = x - np.max(x, axis=-1, keepdims=True)
-    ex = np.exp(x)
-    return ex/np.sum(ex, axis=-1, keepdims=True)
-
-def make_path(f):
-    d = os.path.dirname(f)
-    if d and not os.path.exists(d):
-        os.makedirs(d)
-    return f
-
-def _identity_init(shape, dtype, partition_info, scale):
-    n = shape[-1]
-    w = np.eye(n)*scale
-    if len([s for s in shape if s != 1]) == 2:
-        w = w.reshape(shape)
-    return w.astype(np.float32)
-
-def identity_init(scale=1.0):
-    return partial(_identity_init, scale=scale)
-
-def _np_init(shape, dtype, partition_info, w):
-    return w
-
-def np_init(w):
-    return partial(_np_init, w=w)
 
 class ResultLogger(object):
     def __init__(self, path, *args, **kwargs):
